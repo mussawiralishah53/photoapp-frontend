@@ -48,22 +48,48 @@ export async function getPhotoDetails(id) {
   return res.json();
 }
 
-export async function uploadPhoto(formData, token) {
+// ------- UPLOAD PHOTO -------
+export async function uploadPhoto({ title, description, file }) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("Not logged in");
+  }
+
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("description", description);
+  formData.append("photo", file); // field name must match backend
+
   const res = await fetch(`${API_URL}/photos`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
+      // DO NOT set Content-Type here, browser will set the boundary for FormData
     },
-    body: formData, // IMPORTANT: no JSON, no content-type
+    body: formData,
   });
 
   if (!res.ok) {
-    const msg = await res.text();
-    throw new Error(msg || "Upload failed");
+    let msg = "Upload failed";
+
+    // Try to read JSON error once
+    try {
+      const data = await res.json();
+      if (data && data.message) {
+        msg = data.message;
+      }
+    } catch (e) {
+      // If JSON parsing fails, we just stick with the default message.
+      // Don't call res.text() here – body can only be read once.
+    }
+
+    throw new Error(msg);
   }
 
+  // Success path – read body once as JSON
   return res.json();
 }
+
 
 
 // ------- COMMENTS -------

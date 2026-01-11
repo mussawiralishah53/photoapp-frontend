@@ -1,37 +1,42 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { getPhotos } from "../api/api";
 import PhotoCard from "../components/PhotoCard";
 
 export default function Home() {
   const [photos, setPhotos] = useState([]);
-  const [error, setError] = useState("");
 
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const search = params.get("search") || "";
+  async function load() {
+    const data = await getPhotos();
+    setPhotos(data);
+  }
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await getPhotos(search);
-        setPhotos(data);
-        setError("");
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load photos");
-      }
-    }
     load();
-  }, [search]);
+  }, []);
 
   return (
-    <div className="home-container">
-      <h1 className="home-title">Latest Photos</h1>
+    <div style={{ padding: "40px 20px" }}>
+      <h1
+        style={{
+          textAlign: "center",
+          fontSize: "32px",
+          marginBottom: "30px",
+          fontWeight: "bold",
+        }}
+      >
+        Latest Photos
+      </h1>
 
-      {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
-
-      <div className="photo-grid">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "30px",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "20px",
+        }}
+      >
         {photos.map((p) => (
           <PhotoCard key={p.id} photo={p} />
         ))}
